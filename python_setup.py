@@ -1,4 +1,5 @@
 '''Importation of a set of data files to a geoserver.'''
+from asyncio.windows_events import NULL
 import os
 import sys
 import time
@@ -40,30 +41,32 @@ def main():
                 username = os.getenv('GEOSERVER_ADMIN_USER'),
                 password = os.getenv('GEOSERVER_ADMIN_PASSWORD'))
 
-  # Definition of the filenames (radicals) to be imported:
-  imp_dir = os.getenv('DATA_IMPORT_DIR')
-  workspace = cat.get_workspace(os.getenv('WORKSPACE'))
-  files_to_import = []
+  # Check if there is no data to import in the geoserver
+  if os.getenv('DATA_IMPORT_DIR') == NULL:
+    # Definition of the filenames (radicals) to be imported:
+    imp_dir = os.getenv('DATA_IMPORT_DIR')
+    workspace = cat.get_workspace(os.getenv('WORKSPACE'))
+    files_to_import = []
 
-  for file in os.listdir(imp_dir) :
-    if os.path.splitext(file)[0] not in files_to_import :
-      files_to_import.append(os.path.splitext(file)[0])
+    for file in os.listdir(imp_dir) :
+      if os.path.splitext(file)[0] not in files_to_import :
+        files_to_import.append(os.path.splitext(file)[0])
 
-  # Importation per se:
-  for file_name in files_to_import:
-    shapefile_plus_sidecars = {
-      'shp': os.path.join(imp_dir , file_name )+'.shp',
-      'shx': os.path.join(imp_dir , file_name )+ '.shx',
-      'prj': os.path.join(imp_dir , file_name )+'.prj',
-      'dbf': os.path.join(imp_dir , file_name )+ '.dbf',
-    }
-    try:
-      cat.create_featurestore(file_name,
-                              workspace=workspace,
-                              data=shapefile_plus_sidecars)
-      print(file_name + " successfully uploaded to geoserver.")
-    except ConflictingDataError:
-      print(file_name + " was already stored within the geoserver.")
+    # Importation per se:
+    for file_name in files_to_import:
+      shapefile_plus_sidecars = {
+        'shp': os.path.join(imp_dir , file_name )+'.shp',
+        'shx': os.path.join(imp_dir , file_name )+ '.shx',
+        'prj': os.path.join(imp_dir , file_name )+'.prj',
+        'dbf': os.path.join(imp_dir , file_name )+ '.dbf',
+      }
+      try:
+        cat.create_featurestore(file_name,
+                                workspace=workspace,
+                                data=shapefile_plus_sidecars)
+        print(file_name + " successfully uploaded to geoserver.")
+      except ConflictingDataError:
+        print(file_name + " was already stored within the geoserver.")
 
   print("Geoserver-setup exiting with success.")
 
